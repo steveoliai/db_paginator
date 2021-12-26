@@ -32,6 +32,7 @@ t_rec_output OUT SYS_REFCURSOR:
 
 
 Tables:
+
 report_settings:
     this can be used to give a hint for the time interval to use for a give table/view query.  
     In the procedure, a very simplistic method is used to determine what interval to use.  If you have a good interval to use, set it in the dayinterval column for the "reportname". Make sure to set "forcesetting" to 'Y'.
