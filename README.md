@@ -1,4 +1,4 @@
-# db_paginator
+# DB Paginator
 Written as a POC, mostly to help performance when querying a large number of rows retrned from a date range condition and sorted by that date. This was born from a hypothetical requirement where a client may need to have the ability to view top n transaction data sorted by date from a large amount of data.  In this case, sorting would be the pain point as the number of rows returned for a given date range would be very large (millions). This procedure breaks down the date range into smaller chunks to process and returns the results in a cursor.  It keeps track of where it leaves off to support stateless applications and to mimic pagination. Subsequent calls will return the next rows. 
 
 ## Paremeters:
