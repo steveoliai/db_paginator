@@ -1,12 +1,12 @@
 # db_paginator
-Written as a POC mostly to help performance when querying millions of rows with a large date range condition and sorted by that date. This procedure breaks down the date range into smaller chunks to process and returns the results in a cursor.
+Written as a POC, mostly to help performance when querying a large number of rows retrned from a date range condition and sorted by that date. This was born from a requirement where a client needed to have the ability to view transaction data sorted by date.  In this case, sorting was the main pain point as the number of rows returned for a given date range was very large (millions). This procedure breaks down the date range into smaller chunks to process and returns the results in a cursor.  It keeps track of where it leaves off to support stateless applications and to mimic pagination. Subsequent calls will return the next rows. 
 
 ## Paremeters:
 
 1. t_reportname varchar2: 
     -- this can be a table name or a view
 2. t_collist VARCHAR2: -- list of columns in the table or view that you want returned
-3. t_reportconditions varchar2: -- conditions to pass
+3. t_reportconditions varchar2: -- additional conditions to pass besides the date condition in t_datecolname, t_dtfrom and t_dtto below
 4. t_pkcolname varchar2: -- name of the primary key column
 5. t_datecolname varchar2: -- name of the date column that you are passing a condition on and are sorting by
 6. t_sessionid IN VARCHAR2: -- identifier for the session executing the procedure
@@ -23,7 +23,7 @@ Written as a POC mostly to help performance when querying millions of rows with 
 
 1. report_settings:
     this can be used to give a hint for the time interval to use for a give table/view query.  
-    In the procedure, a very simplistic method is used to determine what interval to use.  If you have a good interval to use, set it in the dayinterval column for the "reportname". Make sure to set "forcesetting" to 'Y'.
+    In the procedure, a very simplistic method is used to determine what interval to use.  If you have an optimal interval to use, set it in the dayinterval column for the "reportname". Make sure to set "forcesetting" to 'Y'.
 
 2. report_instance:
     This is used to log the instance of someone running  the report.
@@ -49,11 +49,11 @@ DECLARE
   T_HASMORE CHAR(200);
   T_REC_OUTPUT SYS_REFCURSOR;
 BEGIN
-  T_REPORTNAME := 'acct_trans_vw1';
-  T_COLLIST := 'ACC_ID, ACC_NUMBER, ACC_NAME, BANK_ID, TX_CODE, BOOK_DATE, TX_ID';
+  T_REPORTNAME := 'BIG_TRANSACTION_VIEW';
+  T_COLLIST := 'COLUMN_1, COLUMN_2, COLUMN_3, COLUMN_4';
   T_REPORTCONDITIONS := 'ACC_ID =1934863';
-  T_PKCOLNAME := 'TX_ID';
-  T_DATECOLNAME := 'BOOK_DATE';
+  T_PKCOLNAME := 'PRIMARYKEY_ID';
+  T_DATECOLNAME := 'DATECOLUMN';
   T_SESSIONID := '3';
   T_NUMROWS := 15;
   T_DTFROM := to_date('2021-07-12','yyyy-MM-dd');
