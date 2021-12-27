@@ -33,7 +33,7 @@ Written as a POC mostly to help performance when querying millions of rows with 
 
 ### Sample Call from SQL Developer:
 
-```
+```sql
 DECLARE
   T_REPORTNAME VARCHAR2(200);
   T_COLLIST VARCHAR2(200);
