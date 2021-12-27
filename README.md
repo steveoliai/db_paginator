@@ -33,7 +33,7 @@ Written as a POC mostly to help performance when querying millions of rows with 
 
 ### Sample Call from SQL Developer:
 
-
+```
 DECLARE
   T_REPORTNAME VARCHAR2(200);
   T_COLLIST VARCHAR2(200);
@@ -86,3 +86,4 @@ DBMS_OUTPUT.PUT_LINE('T_REC_OUTPUT = ' || T_REC_OUTPUT);
   :T_REC_OUTPUT := T_REC_OUTPUT; --<-- Cursor
 --rollback; 
 END;
+```
