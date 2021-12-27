@@ -3,9 +3,9 @@ Written as a POC mostly to help performance when querying millions of rows with 
 
 ## Paremeters:
 
-*t_reportname varchar2: 
+  *t_reportname varchar2: 
     -- this can be a table name or a view
-*t_collist VARCHAR2:  
+  *t_collist VARCHAR2:  
     -- list of columns in the table or view that you want returned
 *t_reportconditions varchar2: 
     -- conditions to pass
