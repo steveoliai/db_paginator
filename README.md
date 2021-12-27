@@ -15,8 +15,8 @@ Written as a POC, mostly to help performance when querying a large number of row
 9. t_dtto IN DATE: -- to date to pass as a condition on t_datecolname
 10. t_pageno_in IN NUMBER: -- OPTIONAL: if NULL runs for the next page to be generated.  If you pass a value, it will look for a previously generated page in report_scroll and return those results.
 11. t_sort IN VARCHAR2: -- ASC or DESC
-12. t_hasmore OUT CHAR: -- return to the applicaiton 'Y' or 'N' as an indicator if there are more records
-13. t_rec_output OUT SYS_REFCURSOR: -- the return resuls
+12. t_hasmore OUT CHAR: -- return to the application 'Y' or 'N' as an indicator if there are more records
+13. t_rec_output OUT SYS_REFCURSOR: -- the return results
 
 
 ## Tables:
