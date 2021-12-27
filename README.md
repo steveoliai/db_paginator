@@ -3,31 +3,31 @@ Written as a POC mostly to help performance when querying millions of rows with 
 
 ## Paremeters:
 
-t_reportname varchar2: 
+⋅⋅*t_reportname varchar2: 
     -- this can be a table name or a view
-t_collist VARCHAR2:  
+⋅⋅*t_collist VARCHAR2:  
     -- list of columns in the table or view that you want returned
-t_reportconditions varchar2: 
+⋅⋅*t_reportconditions varchar2: 
     -- conditions to pass
-t_pkcolname varchar2:  
+⋅⋅*t_pkcolname varchar2:  
     -- name of the primary key column
-t_datecolname varchar2:  
+⋅⋅*t_datecolname varchar2:  
     -- name of the date column that you are passing a condition on and are sorting by
-t_sessionid IN VARCHAR2:  
+⋅⋅*t_sessionid IN VARCHAR2:  
     -- identifier for the session executing the procedure
-t_numrows IN NUMBER: 
+⋅⋅*t_numrows IN NUMBER: 
     -- number of rows to return
-t_dtfrom IN DATE: 
+⋅⋅*t_dtfrom IN DATE: 
     -- from date to pass as a condition on t_datecolname
-t_dtto IN DATE: 
+⋅⋅*t_dtto IN DATE: 
     -- to date to pass as a condition on t_datecolname
-t_pageno_in IN NUMBER: 
+⋅⋅*t_pageno_in IN NUMBER: 
     -- OPTIONAL: if NULL runs for the next page to be generated.  If you pass a value, it will look for a previously generated page in report_scroll and return those results.
-t_sort IN VARCHAR2:  
+⋅⋅*t_sort IN VARCHAR2:  
     -- ASC or DESC
-t_hasmore OUT CHAR:  
+⋅⋅*t_hasmore OUT CHAR:  
     -- return to the applicaiton 'Y' or 'N' as an indicator if there are more records
-t_rec_output OUT SYS_REFCURSOR:
+⋅⋅*t_rec_output OUT SYS_REFCURSOR:
      -- the return resuls
 
 
