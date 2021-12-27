@@ -5,45 +5,33 @@ Written as a POC mostly to help performance when querying millions of rows with 
 
 1. t_reportname varchar2: 
     -- this can be a table name or a view
-2. t_collist VARCHAR2:  
-    -- list of columns in the table or view that you want returned
-3. t_reportconditions varchar2: 
-    -- conditions to pass
-4. t_pkcolname varchar2:  
-    -- name of the primary key column
-5. t_datecolname varchar2:  
-    -- name of the date column that you are passing a condition on and are sorting by
-6. t_sessionid IN VARCHAR2:  
-    -- identifier for the session executing the procedure
-7. t_numrows IN NUMBER: 
-    -- number of rows to return
-8. t_dtfrom IN DATE: 
-    -- from date to pass as a condition on t_datecolname
-9. t_dtto IN DATE: 
-    -- to date to pass as a condition on t_datecolname
-10. t_pageno_in IN NUMBER: 
-    -- OPTIONAL: if NULL runs for the next page to be generated.  If you pass a value, it will look for a previously generated page in report_scroll and return those results.
-11. t_sort IN VARCHAR2:  
-    -- ASC or DESC
-12. t_hasmore OUT CHAR:  
-    -- return to the applicaiton 'Y' or 'N' as an indicator if there are more records
-13. t_rec_output OUT SYS_REFCURSOR:
-     -- the return resuls
+2. t_collist VARCHAR2: -- list of columns in the table or view that you want returned
+3. t_reportconditions varchar2: -- conditions to pass
+4. t_pkcolname varchar2: -- name of the primary key column
+5. t_datecolname varchar2: -- name of the date column that you are passing a condition on and are sorting by
+6. t_sessionid IN VARCHAR2: -- identifier for the session executing the procedure
+7. t_numrows IN NUMBER: -- number of rows to return
+8. t_dtfrom IN DATE: -- from date to pass as a condition on t_datecolname
+9. t_dtto IN DATE: -- to date to pass as a condition on t_datecolname
+10. t_pageno_in IN NUMBER: -- OPTIONAL: if NULL runs for the next page to be generated.  If you pass a value, it will look for a previously generated page in report_scroll and return those results.
+11. t_sort IN VARCHAR2: -- ASC or DESC
+12. t_hasmore OUT CHAR: -- return to the applicaiton 'Y' or 'N' as an indicator if there are more records
+13. t_rec_output OUT SYS_REFCURSOR: -- the return resuls
 
 
-Tables:
+## Tables:
 
-report_settings:
+1. report_settings:
     this can be used to give a hint for the time interval to use for a give table/view query.  
     In the procedure, a very simplistic method is used to determine what interval to use.  If you have a good interval to use, set it in the dayinterval column for the "reportname". Make sure to set "forcesetting" to 'Y'.
 
-report_instance:
+2. report_instance:
     This is used to log the instance of someone running  the report.
 
-report_scroll:
+3. report_scroll:
     An entry exists for each page generated for a given report_instance.       
 
-Sample Call from SQL Developer:
+### Sample Call from SQL Developer:
 
 
 DECLARE
