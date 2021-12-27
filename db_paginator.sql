@@ -12,7 +12,6 @@
 --------------------------------------------------------------------------------------------------------------------------------------*/
 --table for logging/resuming report
 
-```sql
 create table report_settings (
     reportid number GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1),
     reportname varchar2(128),
@@ -256,4 +255,3 @@ BEGIN
 END;
 
 /
-```
