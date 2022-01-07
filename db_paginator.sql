@@ -1,15 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------------------
-	<Author			:-> Steve Oliai
-	<Start Date		:-> 10/01/2021
-	<Requirement Desc	:-> To mimic pagination in a more efficient way for large data sets from the DB to support stateless applications
-
-----------------------------------------------------------------------------------------------------------------------------------------
--- History:
--- Modified Date		Modified by		Reason Of Changes
-----------------------------------------------------------------------------------------------------------------------------------------
-12-21-2021              Steve Oliai     Added a Sort Option
-12-24-2021              Steve Oliai     Added no data found exception handler
---------------------------------------------------------------------------------------------------------------------------------------*/
 --table for logging/resuming report
 
 create table report_settings (
