@@ -98,38 +98,39 @@ BEGIN
             --prepare a statement to check for total records in report
             t_rec_check_sqlstmt := 'select count(*), max('||t_pkcolname||') + 1 from '||t_reportname||' where '||t_reportconditions||' and '||t_datecolname||' >= :2 and '||t_datecolname||' <= :3 ';
             execute immediate t_rec_check_sqlstmt into t_numrecsinrpt, t_maxid using t_dtfrom, t_dtto;
-
-            if upper(t_sort) = 'DESC' then  --need to go in reverse order
-                t_pkid := t_maxid;
-            end if;
-
-            if t_dayinterval is null then
-                --find a suitable day interval
-                t_rptdayrange := round(t_dtto - t_dtfrom);
-                if t_rptdayrange > 7 then  --process in batches
-
-
-                    if t_numrecsinrpt < 10000 then  --if total count < 10000
-                        t_dayinterval := t_dtto - t_dtfrom;  --pass the whole range
-                    elsif t_numrecsinrpt/t_rptdayrange <= t_numrows and t_numrecsinrpt > 10000  then --if daily average is less than number to display per page and total count > 10000
-                        t_dayinterval := 7;
-                    else  --it's greater than 10000 and  daily average is greater than number to display per page
-                        t_dayinterval := 1;
-                    end if;
-                else 
-                    t_dayinterval := t_dtto - t_dtfrom;  --pass the whole range    
+            if t_numrecsinrpt > 0 then  --only go through this if there is data
+                if upper(t_sort) = 'DESC' then  --need to go in reverse order
+                    t_pkid := t_maxid;
                 end if;
-                if upper(t_sort) = 'ASC' then
-                    t_newrunto := t_newrunfrom + t_dayinterval;
+
+                if t_dayinterval is null then
+                    --find a suitable day interval
+                    t_rptdayrange := round(t_dtto - t_dtfrom);
+                    if t_rptdayrange > 7 then  --process in batches
+
+
+                        if t_numrecsinrpt < 10000 then  --if total count < 10000
+                            t_dayinterval := t_dtto - t_dtfrom;  --pass the whole range
+                        elsif t_numrecsinrpt/t_rptdayrange <= t_numrows and t_numrecsinrpt > 10000  then --if daily average is less than number to display per page and total count > 10000
+                            t_dayinterval := 7;
+                        else  --it's greater than 10000 and  daily average is greater than number to display per page
+                            t_dayinterval := 1;
+                        end if;
+                    else 
+                        t_dayinterval := t_dtto - t_dtfrom;  --pass the whole range    
+                    end if;
+                    if upper(t_sort) = 'ASC' then
+                        t_newrunto := t_newrunfrom + t_dayinterval;
+                    else
+                        t_newrunfrom := t_newrunto - t_dayinterval; -- descending order by default
+                    end if;    
                 else
-                    t_newrunfrom := t_newrunto - t_dayinterval; -- descending order by default
+                    if upper(t_sort) = 'ASC' then
+                        t_newrunto := t_newrunfrom + t_dayinterval; --use predefined interval
+                    else
+                        t_newrunfrom := t_newrunto - t_dayinterval; -- descending order by default
+                    end if; 
                 end if;    
-            else
-                if upper(t_sort) = 'ASC' then
-                    t_newrunto := t_newrunfrom + t_dayinterval; --use predefined interval
-                else
-                    t_newrunfrom := t_newrunto - t_dayinterval; -- descending order by default
-                end if; 
             end if;    
         else 
             -- get the last page generated for the report
@@ -149,74 +150,74 @@ BEGIN
         if t_newrunto > t_dtto then 
             t_newrunto := t_dtto;
         end if;
-
-        --make sure we are getting the specified number of rows to display per page
-        t_checkpagecount := 0;
-        --prepare a statement to check for total records in page
-        if upper(t_sort) = 'ASC' then
-            t_rec_check_sqlstmt := 'select count(*) from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' > :2 and '||t_datecolname||' <= :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' > :5))';
-            execute immediate t_rec_check_sqlstmt into t_checkpagecount using t_newrunfrom , t_newrunto, t_newrunfrom, t_pkid;
-        else
-            t_rec_check_sqlstmt := 'select count(*) from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' >= :2 and '||t_datecolname||' < :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' < :5))';
-            execute immediate t_rec_check_sqlstmt into t_checkpagecount using t_newrunfrom , t_newrunto, t_newrunto, t_pkid;
-        end if;
-
-        if upper(t_sort) = 'ASC' then
-            WHILE t_checkpagecount < t_numrows and t_newrunto < t_dtto LOOP  --if less than number to display add the interval and we have not met the date range
-                t_newrunto := t_newrunto + t_dayinterval;
-                if t_newrunto > t_dtto then
-                    t_newrunto := t_dtto;
-                end if;
-                -- get a new count with the new range
+        if t_numrecsinrpt > 0 then  --only go through this if there is data
+            --make sure we are getting the specified number of rows to display per page
+            t_checkpagecount := 0;
+            --prepare a statement to check for total records in page
+            if upper(t_sort) = 'ASC' then
                 t_rec_check_sqlstmt := 'select count(*) from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' > :2 and '||t_datecolname||' <= :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' > :5))';
                 execute immediate t_rec_check_sqlstmt into t_checkpagecount using t_newrunfrom , t_newrunto, t_newrunfrom, t_pkid;
-
-            END LOOP;
-
-        else
-            --if descending sort order
-            WHILE t_checkpagecount < t_numrows and t_newrunfrom > t_dtfrom LOOP  --if less than number to display add the interval and we have not met the date range
-                t_newrunfrom := t_newrunfrom - t_dayinterval;
-                if t_newrunfrom < t_dtfrom then
-                    t_newrunfrom := t_dtfrom;
-                end if;
-                -- get a new count with the new range
+            else
                 t_rec_check_sqlstmt := 'select count(*) from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' >= :2 and '||t_datecolname||' < :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' < :5))';
                 execute immediate t_rec_check_sqlstmt into t_checkpagecount using t_newrunfrom , t_newrunto, t_newrunto, t_pkid;
+            end if;
 
-            END LOOP;
+            if upper(t_sort) = 'ASC' then
+                WHILE t_checkpagecount < t_numrows and t_newrunto < t_dtto LOOP  --if less than number to display add the interval and we have not met the date range
+                    t_newrunto := t_newrunto + t_dayinterval;
+                    if t_newrunto > t_dtto then
+                        t_newrunto := t_dtto;
+                    end if;
+                    -- get a new count with the new range
+                    t_rec_check_sqlstmt := 'select count(*) from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' > :2 and '||t_datecolname||' <= :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' > :5))';
+                    execute immediate t_rec_check_sqlstmt into t_checkpagecount using t_newrunfrom , t_newrunto, t_newrunfrom, t_pkid;
 
-        end if;    
+                END LOOP;
 
-        --need to get new data for insert into report_scroll
-        if upper(t_sort) = 'ASC' then
-            t_get_param_sqlstmt := 'select '||t_datecolname||', '||t_pkcolname||' from (select '||t_datecolname||', '||t_pkcolname||' from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' > :2 and '||t_datecolname||' <= :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' > :5)) order by '||t_datecolname||', '||t_pkcolname||' fetch first :6 rows only) order by '||t_datecolname||' desc, '||t_pkcolname||' desc  fetch first 1 rows only';
-            execute immediate t_get_param_sqlstmt into t_pagerunto, t_newpkid using t_newrunfrom , t_newrunto, t_newrunfrom, t_pkid, t_numrows;
-            t_pagerunfrom := t_newrunfrom;
-        else
-            t_get_param_sqlstmt := 'select '||t_datecolname||', '||t_pkcolname||' from (select '||t_datecolname||', '||t_pkcolname||' from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' >= :2 and '||t_datecolname||' < :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' < :5)) order by '||t_datecolname||' desc, '||t_pkcolname||' desc fetch first :6 rows only) order by '||t_datecolname||' , '||t_pkcolname||' fetch first 1 rows only';
-            execute immediate t_get_param_sqlstmt into t_pagerunfrom, t_newpkid using t_newrunfrom , t_newrunto, t_newrunto, t_pkid, t_numrows;
-            t_pagerunto := t_newrunto;
+            else
+                --if descending sort order
+                WHILE t_checkpagecount < t_numrows and t_newrunfrom > t_dtfrom LOOP  --if less than number to display add the interval and we have not met the date range
+                    t_newrunfrom := t_newrunfrom - t_dayinterval;
+                    if t_newrunfrom < t_dtfrom then
+                        t_newrunfrom := t_dtfrom;
+                    end if;
+                    -- get a new count with the new range
+                    t_rec_check_sqlstmt := 'select count(*) from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' >= :2 and '||t_datecolname||' < :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' < :5))';
+                    execute immediate t_rec_check_sqlstmt into t_checkpagecount using t_newrunfrom , t_newrunto, t_newrunto, t_pkid;
+
+                END LOOP;
+
+            end if;    
+
+            --need to get new data for insert into report_scroll
+            if upper(t_sort) = 'ASC' then
+                t_get_param_sqlstmt := 'select '||t_datecolname||', '||t_pkcolname||' from (select '||t_datecolname||', '||t_pkcolname||' from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' > :2 and '||t_datecolname||' <= :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' > :5)) order by '||t_datecolname||', '||t_pkcolname||' fetch first :6 rows only) order by '||t_datecolname||' desc, '||t_pkcolname||' desc  fetch first 1 rows only';
+                execute immediate t_get_param_sqlstmt into t_pagerunto, t_newpkid using t_newrunfrom , t_newrunto, t_newrunfrom, t_pkid, t_numrows;
+                t_pagerunfrom := t_newrunfrom;
+            else
+                t_get_param_sqlstmt := 'select '||t_datecolname||', '||t_pkcolname||' from (select '||t_datecolname||', '||t_pkcolname||' from '||t_reportname||' where '||t_reportconditions||' and (('||t_datecolname||' >= :2 and '||t_datecolname||' < :3) or ('||t_datecolname||' = :4 and '||t_pkcolname||' < :5)) order by '||t_datecolname||' desc, '||t_pkcolname||' desc fetch first :6 rows only) order by '||t_datecolname||' , '||t_pkcolname||' fetch first 1 rows only';
+                execute immediate t_get_param_sqlstmt into t_pagerunfrom, t_newpkid using t_newrunfrom , t_newrunto, t_newrunto, t_pkid, t_numrows;
+                t_pagerunto := t_newrunto;
+            end if;
+
+
+            --check if we have a report entry w/o forced params
+            select nvl(max(reportid), 0) into t_checkrpt from report_settings where upper(reportname) = upper(t_reportname);
+            if t_checkrpt = 0 then
+                insert into report_settings (reportname, dayinterval) values (t_reportname, t_dayinterval);
+            end if;
+
+            --insert our settings/info
+            if t_pageno = 1 then --insert the instance record
+                insert into report_instance(sessionid, reportname, reportconditions, columnlist, pageno, numrows, numrecsinrpt, datefrom, dateto, pagedatefrom, pagedateto, pkid, dayinterval, sort)
+                    values (t_sessionid, t_reportname, t_reportconditions, t_collist, t_pageno, t_numrows, t_numrecsinrpt, t_dtfrom, t_dtto, t_pagerunfrom, t_pagerunto, t_newpkid, t_dayinterval, t_sort);
+                select nvl(max(reportinstanceid), 0) into t_reportinstanceid from report_instance;    
+            else --update the existing row        
+                update report_instance set pageno = t_pageno, pagedatefrom = t_pagerunfrom, pagedateto = t_pagerunto, pkid = t_newpkid where reportinstanceid = t_reportinstanceid;
+            end if;
+            insert into report_scroll(sessionid, reportinstanceid, reportname, pageno, numrows, datefrom, dateto, pagedatefrom, pagedateto, pkid, dayinterval)
+                values (t_sessionid, t_reportinstanceid, t_reportname, t_pageno, t_numrows, t_dtfrom, t_dtto, t_pagerunfrom, t_pagerunto, t_newpkid, t_dayinterval);
         end if;
-
-
-        --check if we have a report entry w/o forced params
-        select nvl(max(reportid), 0) into t_checkrpt from report_settings where upper(reportname) = upper(t_reportname);
-        if t_checkrpt = 0 then
-            insert into report_settings (reportname, dayinterval) values (t_reportname, t_dayinterval);
-        end if;
-
-        --insert our settings/info
-        if t_pageno = 1 then --insert the instance record
-            insert into report_instance(sessionid, reportname, reportconditions, columnlist, pageno, numrows, numrecsinrpt, datefrom, dateto, pagedatefrom, pagedateto, pkid, dayinterval, sort)
-                values (t_sessionid, t_reportname, t_reportconditions, t_collist, t_pageno, t_numrows, t_numrecsinrpt, t_dtfrom, t_dtto, t_pagerunfrom, t_pagerunto, t_newpkid, t_dayinterval, t_sort);
-            select nvl(max(reportinstanceid), 0) into t_reportinstanceid from report_instance;    
-        else --update the existing row        
-            update report_instance set pageno = t_pageno, pagedatefrom = t_pagerunfrom, pagedateto = t_pagerunto, pkid = t_newpkid where reportinstanceid = t_reportinstanceid;
-        end if;
-        insert into report_scroll(sessionid, reportinstanceid, reportname, pageno, numrows, datefrom, dateto, pagedatefrom, pagedateto, pkid, dayinterval)
-            values (t_sessionid, t_reportinstanceid, t_reportname, t_pageno, t_numrows, t_dtfrom, t_dtto, t_pagerunfrom, t_pagerunto, t_newpkid, t_dayinterval);
-
     else  -- they want a specific page that is already generated
         select pagedatefrom, pagedateto into t_newrunfrom, t_newrunto from report_scroll where pageno = t_pageno_in and upper(sessionid) = upper(t_sessionid) and upper(reportname) = upper(t_reportname) and datefrom = t_dtfrom and dateto = t_dtto and createdon > sysdate - (1/24);
         --need the PKID from the previous page
